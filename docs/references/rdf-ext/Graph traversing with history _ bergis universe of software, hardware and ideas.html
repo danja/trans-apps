@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Graph traversing with history | bergis universe of software, hardware and ideas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Graph traversing with plain RDF&#x2F;JS objects is no fun. Keeping track of the path walked while traversing a graph adds another layer of complexity. With Grapoi, graph traversing is fun again and makes c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Graph traversing with history">
+<meta property="og:url" content="https://www.bergnet.org/2023/09/grapoi/index.html">
+<meta property="og:site_name" content="bergis universe of software, hardware and ideas">
+<meta property="og:description" content="Graph traversing with plain RDF&#x2F;JS objects is no fun. Keeping track of the path walked while traversing a graph adds another layer of complexity. With Grapoi, graph traversing is fun again and makes c">
+<meta property="og:locale">
+<meta property="og:image" content="https://www.bergnet.org/files/2023/grapoi/givenname-nationality-term.png">
+<meta property="og:image" content="https://www.bergnet.org/files/2023/grapoi/givenname-address.png">
+<meta property="og:image" content="https://www.bergnet.org/files/2023/grapoi/givenname-address-quads.png">
+<meta property="article:published_time" content="2023-09-10T20:00:00.000Z">
+<meta property="article:modified_time" content="2024-01-21T08:05:01.225Z">
+<meta property="article:author" content="bergi">
+<meta property="article:tag" content="RDF">
+<meta property="article:tag" content="JavaScript">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.bergnet.org/files/2023/grapoi/givenname-nationality-term.png">
+  
+    <link rel="alternate" href="/atom.xml" title="bergis universe of software, hardware and ideas" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  
+<link rel="stylesheet" href="/css/styles.css">
+
+
+  <script type="text/javascript">
+    var _paq = _paq || [];
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+      var u="//matomo.bergnet.org/";
+      _paq.push(['setTrackerUrl', u+'piwik.php']);
+      _paq.push(['setSiteId', '1']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="cartwheel" class="universe cartwheel"></div>
+  <div id="southern-ring" class="universe southern-ring"></div>
+  <div id="stars1" class="stars universe"></div>
+  <div id="stars2" class="stars universe"></div>
+  <div id="stars3" class="stars universe"></div>
+  <div id="stars4" class="stars universe"></div>
+
+  <div id="page">
+  <div class="container">
+    <div class="blog-header">
+  <h1 class="blog-title"><a href="/">bergis universe of software, hardware and ideas</a></h1>
+  
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-grapoi" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      Graph traversing with history
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <h6>Posted on <a href="/2023/09/grapoi/" class="article-date"><time datetime="2023-09-10T20:00:00.000Z" itemprop="datePublished">2023-09-10</time></a></h6>
+</div>
+
+    
+    
+
+  </div>
+  <div class="article-inner">
+
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Graph traversing with plain RDF/JS objects is no fun. Keeping track of the path walked while traversing a graph adds another layer of complexity. With Grapoi, graph traversing is fun again and makes code more readable.</p>
+<a id="more"></a>
+<p>You may have read my older blog post describing <a href="/2023/03/2023/shacl-engine/">how I implemented a 15x faster JavaScript SHACL engine</a>. That library also introduced a sub-graph coverage report feature. To make the code for that feature more readable, I implemented a traversing library that keeps track of the traversing history. It was only briefly mentioned in the old blog post, but now it’s time to have a detailed look at the traversing library.</p>
+<p>First, some basics: It requires having the term/node, name graph, and the dataset to keep a reference when dealing with RDF data. I use the following data structure in multiple of my RDF/JS libraries, and I call it graph pointer:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  term,</span><br><span class="line">  graph,</span><br><span class="line">  dataset</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Where <code>term</code> and <code>graph</code> are <code>Term</code> objects and <code>dataset</code> is a <code>DatasetCore</code> object. It’s possible for <code>term</code> and <code>graph</code> to have a nullable value, which means any term or any named graph.</p>
+<p>While the data structure fulfills one of the ideas of RDF/JS CG specifications of having minimalistic interfaces, it also shows the need for a high-level library. Nobody wants to write code like this:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ptr = &#123;</span><br><span class="line">  term: [...dataset.match(otherPtr.term, ns.schema.name, <span class="literal">null</span>, otherPtr.graph)][<span class="number">0</span>].subject,</span><br><span class="line">  graph: otherPtr.graph,</span><br><span class="line">  dataset: otherPtr.dataset</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>That is where <a target="_blank" rel="noopener" href="https://github.com/rdf-ext/grapoi">Grapoi</a> comes in. It is inspired by <a target="_blank" rel="noopener" href="https://tinkerpop.apache.org/">Gremlin</a> and allows you to implement the previous logic with the following line:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ptr = otherPtr.out(ns.schema.name)</span><br></pre></td></tr></table></figure>
+<p>But Grapoi extends the idea of the graph pointer in two dimensions.</p>
+<h2 id="List-of-Pointers"><a href="#List-of-Pointers" class="headerlink" title="List of Pointers"></a>List of Pointers</h2><p>Many times, it’s not a single graph pointer that needs to be traversed with a given set of instructions but multiple graph pointers. That could be either initially given or returned by a traversing step. That’s why Grapoi handles a list of pointers. Traversing instructions are processed for each pointer, and a new list of graph pointers is used with the results added in order.</p>
+<p>The following example uses the <a target="_blank" rel="noopener" href="https://github.com/rdf-ext/housemd">House M.D. dataset</a>. It starts with two graph pointers with literal terms. Then, it traverses from object to subject over the predicate givenName. After that, the traversing continues in subject to object direction over nationality and name.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">grapoi(&#123;</span><br><span class="line">  dataset,</span><br><span class="line">  term: [</span><br><span class="line">    rdf.literal(<span class="string">&#x27;Gregory&#x27;</span>),</span><br><span class="line">    rdf.literal(<span class="string">&#x27;Robert&#x27;</span>)</span><br><span class="line">  ]</span><br><span class="line">&#125;)</span><br><span class="line">  .in(ns.schema.givenName)</span><br><span class="line">  .out(ns.schema.nationality)</span><br><span class="line">  .out(ns.schema.name)</span><br></pre></td></tr></table></figure>
+<p><img src="/files/2023/grapoi/givenname-nationality-term.png" alt="network diagram of the traversing steps"></p>
+<p>The result will be a list of pointers with the literals <code>USA</code> and <code>Australia</code> in that order.</p>
+<p>A Grapoi object can be a single graph pointer or a list of them. If all the terms are the same, <code>.term</code> property is set. Otherwise, it’s <code>undefined</code>. The full list of terms is always available with the <code>.terms</code> property as an array.</p>
+<p>Pointers with the same term may show up multiple times. The <code>.distinct()</code> method reduces the list to a unique set of terms. The <code>.distinct()</code> method also compares <code>graph</code> and <code>dataset</code> in case the pointers refer across named graphs or even datasets.</p>
+<h2 id="Path"><a href="#Path" class="headerlink" title="Path"></a>Path</h2><p>A path or the traversing history is the other dimension Grapoi adds. A path can be, in the simplest case, just one-dimensional, referring to a term. But it can also be an ordered list of edges. An edge is a quad with a start and an end. The <code>start</code> and <code>end</code> are strings pointing to the property of the <code>quad</code>. A traverse step from <code>subject</code> to <code>object</code> would look like this:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  quad,</span><br><span class="line">  start: <span class="string">&#x27;subject&#x27;</span>,</span><br><span class="line">  end: <span class="string">&#x27;object&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Every traversing step appends the new edge to the end of the list. A path also implements the graph pointer interface, with the end of the last edge as the <code>term</code>.</p>
+<h2 id="Grapoi"><a href="#Grapoi" class="headerlink" title="Grapoi"></a>Grapoi</h2><p>Grapoi combines the two dimensions. It handles a list of paths. After each traversing step, a new object with a new list of paths is created, with the new edges appended. If there are multiple results for a traversing step, paths for each result are added to the list. There is an iterator to loop over all quads of the whole traversing history. That can be used to generate coverage sub-graphs. Below is an example similar to the earlier one with the required changes:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">rdf.dataset(</span><br><span class="line">  grapoi(&#123;</span><br><span class="line">    dataset,</span><br><span class="line">    term: rdf.literal(<span class="string">&#x27;Gregory&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">    .in(ns.schema.givenName)</span><br><span class="line">    .out(ns.schema.homeLocation)</span><br><span class="line">    .out(ns.schema.address)</span><br><span class="line">    .out()</span><br><span class="line">    .quads()</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p><img src="/files/2023/grapoi/givenname-address.png" alt="network diagram of the traversing steps"></p>
+<p>It’s also possible to first traverse to one or more specific points and start the traversing history from those points. The example below traverses to the address, trims the paths, follows all address properties, and then the quads are added to the dataset. Only the address quads will be in the dataset.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">rdf.dataset(</span><br><span class="line">  grapoi(&#123;</span><br><span class="line">    dataset,</span><br><span class="line">    term: rdf.literal(<span class="string">&#x27;Gregory&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">    .in(ns.schema.givenName)</span><br><span class="line">    .out(ns.schema.homeLocation)</span><br><span class="line">    .out(ns.schema.address)</span><br><span class="line">    .trim()</span><br><span class="line">    .out()</span><br><span class="line">    .quads()</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p><img src="/files/2023/grapoi/givenname-address-quads.png" alt="network diagram of the traversing steps"></p>
+<h2 id="More"><a href="#More" class="headerlink" title="More"></a>More</h2><p>There are some other features that could be mentioned. These are saved for further blog posts, like the Processor that takes care of the traversing and supports not only single-step traversing but also zero or more.</p>
+<h2 id="Documentation-and-Examples"><a href="#Documentation-and-Examples" class="headerlink" title="Documentation and Examples"></a>Documentation and Examples</h2><p>The API documentation is on the <a target="_blank" rel="noopener" href="https://rdf-ext.org/">RDF-Ext</a> homepage. If you want to try it yourself, the <a target="_blank" rel="noopener" href="https://github.com/rdf-ext/rdf-ext-examples">rdf-ext examples</a> repository contains multiple examples as a starting point. You can do that in your browser with <a target="_blank" rel="noopener" href="https://www.gitpod.io/">Gitpod</a>. Check the <a target="_blank" rel="noopener" href="https://rdf-ext.org/tutorial/">tutorial page</a> on the RDF-Ext homepage.</p>
+<h2 id="Clownface"><a href="#Clownface" class="headerlink" title="Clownface"></a>Clownface</h2><p>You may have used Clownface before and noticed some similarities. I developed Clownface some years ago. But now I strongly recommend switching to Grapoi, not only because of its superior feature set but also because I no longer maintain Clownface.</p>
+<h2 id="Comments"><a href="#Comments" class="headerlink" title="Comments"></a>Comments</h2><p>For comments, please follow the <a target="_blank" rel="noopener" href="https://github.com/bergos/www.bergnet.org/discussions/5">GitHub link</a>.</p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RDF/" rel="tag">RDF</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+    
+
+  
+</article>
+
+
+<hr>
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <div class="sidebar-module sidebar-module-inset">
+  <h4>About</h4>
+  <p>
+  You can find me (bergi aka bergos aka Thomas Bergwinkl) on:
+  <ul>
+    <li><a target="_blank" rel="noopener" href="https://mastodon.social/@bergi">Mastodon</a></li>
+    <li><a target="_blank" rel="noopener" href="https://twitter.com/bergi_bergos">Twitter</a></li>
+    <li><a target="_blank" rel="noopener" href="https://github.com/bergos/">GitHub</a></li>
+    <li><a href="https://www.bergnet.org/people/bergi/card#me">WebID</a></li>
+  </ul>
+
+  My home base is located at:
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Landshut">Landshut</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Earth">Earth</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Solar_System">Solar System</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Local_Interstellar_Cloud">Local Interstellar Cloud</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Local_Bubble">Local Bubble</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Orion_Arm">Orion–Cygnus Arm</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Milky_Way">Milky Way</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Local_Group">Local Group</a>,
+  <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Laniakea_Supercluster">Laniakea Supercluster</a>
+</p>
+
+</div>
+
+
+  
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tags</h4>
+    <ul class="sidebar-module-list" itemprop="keywords"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/IoT/" rel="tag">IoT</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a><span class="sidebar-module-list-count">9</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/ML/" rel="tag">ML</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/RDF/" rel="tag">RDF</a><span class="sidebar-module-list-count">8</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/RDF-Ext/" rel="tag">RDF-Ext</a><span class="sidebar-module-list-count">4</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/RawDevJS/" rel="tag">RawDevJS</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/SHACL/" rel="tag">SHACL</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/SPARQL/" rel="tag">SPARQL</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/Series/" rel="tag">Series</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/tags/Video/" rel="tag">Video</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2024/">2024</a><span class="sidebar-module-list-count">3</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2023/">2023</a><span class="sidebar-module-list-count">7</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2022/">2022</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2021/">2021</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2018/">2018</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2017/">2017</a><span class="sidebar-module-list-count">5</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2024/05/unified-landscape/">Unveiling the Unified Landscape: Bridging Knowledge Graphs and Machine Learning</a>
+        </li>
+      
+        <li>
+          <a href="/2024/02/zazuko-code-theft/">Zazuko Stole My Code</a>
+        </li>
+      
+        <li>
+          <a href="/2024/01/rdfjs-data-processing/">RDF/JS for Data Processing</a>
+        </li>
+      
+        <li>
+          <a href="/2023/09/sinking-zazuko-ship/">Leaving the Sinking Zazuko Ship</a>
+        </li>
+      
+        <li>
+          <a href="/2023/09/grapoi/">Graph traversing with history</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="footer navbar navbar-inverse text-center">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2024 bergi
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/universe.js"></script>
+
+
+
+  </div>
+</body>
+</html>
