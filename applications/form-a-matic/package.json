@@ -1,0 +1,17 @@
+{
+  "name": "form-a-matic",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node src/fam-test.js"
+  },
+  "keywords": [],
+  "author": "Danny Ayers",
+  "license": "",
+  "dependencies": {
+    "rdf-ext": "^2.5.2",
+    "rdf-utils-fs": "^3.0.0"
+  }
+}
