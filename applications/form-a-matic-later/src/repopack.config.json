@@ -9,7 +9,6 @@
         "customPatterns": [
             "*.log",
             "docs",
-            "prompts",
             "**/*repopack*"
         ]
     }
