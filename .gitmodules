@@ -1,0 +1,3 @@
+[submodule "applications/reaperbot"]
+	path = applications/reaperbot
+	url = https://github.com/danja/reaperbot.git
