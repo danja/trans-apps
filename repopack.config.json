@@ -1,0 +1,15 @@
+{
+    "output": {
+        "filePath": "./repopack.txt",
+        "headerText": "A Trans App",
+        "removeComments": true
+    },
+    "ignore": {
+        "useDefaultPatterns": true,
+        "customPatterns": [
+            "*.log",
+            "docs",
+            "**/*repopack*"
+        ]
+    }
+}

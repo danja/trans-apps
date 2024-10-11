@@ -1,8 +1,9 @@
-# Globbo
+```sh
+~/github-danny/trans-apps/applications/git-apps
+repopack --verbose -c ../../repopack.config.json .
+```
 
-```
-./run globbo -c '{"rootDir": "./", "sourceDir":"docs"}'
-```
+# Git Processors
 
 there are more notes under
 
@@ -10,10 +11,11 @@ there are more notes under
 
 /home/danny/github-danny/transmissions/docs/postcraft-site/articles/new-service-walkthrough.md
 
-## Description
+## Processors
 
-- Goal : a tool to recursively read local filesystem directories, checking for files with the `.md` extension to identify collections of such
-- Goal : documentation of the app creation process
-- Implementation : a #Transmissions application
+### GitHubList
+
+- Goal : list a user's personal repositories
+- Implementation : a #Transmissions application using the `octokit` JS client libs
 - SoftGoal : reusability
 - _non-goal_ - efficiency
