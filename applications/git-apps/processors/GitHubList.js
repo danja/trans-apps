@@ -15,7 +15,7 @@ class GitHubList extends ProcessProcessor {
 
     async execute(message) {
         logger.debug('GitHubList execute method called');
-        logger.debug('Input message:', JSON.stringify(message, null, 2));
+        logger.debug('Input message: ' + JSON.stringify(message, null, 2));
 
         if (!message.github || !message.github.name) {
             logger.error('GitHub username not provided in the message');
@@ -26,25 +26,79 @@ class GitHubList extends ProcessProcessor {
         logger.debug(`Fetching repositories for username: ${username}`);
 
         try {
-            logger.debug('Calling GitHub API');
-            const { data } = await this.octokit.repos.listForUser({ username });
-            logger.debug(`Fetched ${data.length} repositories`);
-
-            const repositories = data.map(repo => repo.name);
-            logger.debug('Extracted repository names:' + repositories);
+            logger.debug('Calling GitHub API with pagination');
+            const repositories = await this.fetchAllRepositories(username);
+            logger.debug(`Fetched ${repositories.length} repositories`);
 
             message.github.repositories = repositories;
-            logger.debug('Updated message:', JSON.stringify(message, null, 2));
+            logger.debug('Updated message:' + JSON.stringify(message, null, 2));
 
             this.emit('message', message);
             logger.debug('Emitted updated message');
         } catch (error) {
-            logger.error(`Error fetching repositories for ${username}:`, error);
-            logger.debug('Error details:', JSON.stringify(error, null, 2));
-            if (error.status === 403) {
-                logger.warn('Possible rate limit exceeded. Check GitHub API rate limits.');
+            this.handleError(error, username);
+        }
+    }
+
+    async fetchAllRepositories(username) {
+        const repositories = [];
+        let page = 1;
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        while (true) {
+            try {
+                const response = await this.octokit.repos.listForUser({
+                    username,
+                    per_page: 100,
+                    page: page
+                });
+
+                repositories.push(...response.data.map(repo => repo.name));
+                logger.debug(`Fetched page ${page} with ${response.data.length} repositories`);
+
+                this.checkRateLimit(response.headers);
+
+                if (response.data.length < 100) break;
+                page++;
+
+                await delay(1000); // 1 second delay between API calls
+            } catch (error) {
+                throw this.createDetailedError(error, 'Error fetching repositories page');
             }
-            throw error;
+        }
+
+        return repositories;
+    }
+
+    checkRateLimit(headers) {
+        const remaining = headers['x-ratelimit-remaining'];
+        const resetTime = new Date(headers['x-ratelimit-reset'] * 1000);
+        logger.info(`Rate limit remaining: ${remaining}, Reset time: ${resetTime}`);
+
+        if (remaining < 10) {
+            logger.warn(`Rate limit is low. Only ${remaining} requests left. Reset at ${resetTime}`);
+        }
+    }
+
+    createDetailedError(error, message) {
+        const detailedError = new Error(`${message}: ${error.message}`);
+        detailedError.status = error.status;
+        detailedError.response = error.response;
+        return detailedError;
+    }
+
+    handleError(error, username) {
+        logger.error(`Error fetching repositories for ${username}:`, error.message);
+        logger.debug('Error details:', JSON.stringify(error, null, 2));
+
+        if (error.status === 403) {
+            logger.warn('Rate limit exceeded. Check GitHub API rate limits.');
+            throw new Error('GitHub API rate limit exceeded');
+        } else if (error.status === 404) {
+            logger.warn(`User ${username} not found on GitHub`);
+            throw new Error(`GitHub user ${username} not found`);
+        } else {
+            throw new Error(`Failed to fetch GitHub repositories: ${error.message}`);
         }
     }
 }
