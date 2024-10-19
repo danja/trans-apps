@@ -3,8 +3,12 @@
 @prefix : <http://hyperdata.it/transmissions/> .
 
 :module_load_test a trm:Pipeline ;
-    trm:pipe (:s1 :s2 :s3) .
+  #  trm:pipe (:p10 :p20 :p30 :p40) .
+ # trm:pipe (:p10 :p30 :p40) .
 
-:s1 a :Concat .
-:s2 a :ShowMessage .
-:s3 a :DeadEnd .
+trm:pipe (:p10 :p20 ) .
+
+:p10 a :NOP .
+:p20 a :Concat .
+:p30 a :ShowMessage .
+:p40 a :DeadEnd .
