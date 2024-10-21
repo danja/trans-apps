@@ -1,7 +1,7 @@
 {
     "output": {
-        "filePath": "./repopack-trans-apps-git-apps.txt",
-        "headerText": "git-apps source code",
+        "filePath": "./repopack-trans-apps-module-load-test.txt",
+        "headerText": "module-load-test source code",
         "removeComments": true
     },
     "ignore": {

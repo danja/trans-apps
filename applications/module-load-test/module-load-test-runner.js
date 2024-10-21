@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import TransmissionBuilder from '../../../transmissions/src/engine/TransmissionBuilder.js';
-import ModuleLoaderFactory from './processors/ModuleLoaderFactory.js';
+import ModuleLoaderFactory from './processors/_ModuleLoaderFactory.js';
 import logger from '../../../transmissions/src/utils/Logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
