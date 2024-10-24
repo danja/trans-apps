@@ -1,0 +1,20 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix trm: <http://purl.org/stuff/transmission/> .
+@prefix : <http://hyperdata.it/transmissions/> .
+
+:json_converter a trm:Pipeline ;
+    trm:pipe (:s1 :s2 :s3 :s4a :s5a :s6a :s4b :s5b :s6b) .
+
+:s1 a :JSONReader .
+:s2 a :JSONWalker .
+:s3 a :Fork .
+
+# Markdown pipeline
+:s4a a :MarkdownFormatter .
+:s5a a :FileWriter .
+:s6a a :DeadEnd .
+
+# Turtle pipeline  
+:s4b a :TurtleFormatter .
+:s5b a :FileWriter .
+:s6b a :DeadEnd .

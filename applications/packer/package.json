@@ -1,0 +1,15 @@
+{
+    "name": "packer",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "runner.js",
+    "scripts": {
+        "start": "node test-runner.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "rp": "repopack --verbose -c repopack.config.json ."
+    },
+    "keywords": [],
+    "author": "Danny Ayers",
+    "license": "MIT",
+    "description": "A minimal app to use as a template"
+}
