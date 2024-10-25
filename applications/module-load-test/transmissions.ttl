@@ -17,7 +17,7 @@
 :module_load_test a trm:Pipeline ;
 
 
-trm:pipe (:p10 :SM  :p20 ) .
+trm:pipe (:SM :DE :p10 :SM  :p20 ) .
 
 :p10 a :DatasetReader . 
 :p20 a :Concat .
