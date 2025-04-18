@@ -1,36 +1,36 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import TransmissionBuilder from '../../../transmissions/src/engine/TransmissionBuilder.js';
-import GitHubProcessorsFactory from './processors/GitHubProcessorsFactory.js';
-import AbstractProcessorFactory from '../../../transmissions/src/engine/AbstractProcessorFactory.js';
-import logger from '../../../transmissions/src/utils/Logger.js';
+import path from 'path'
+import { fileURLToPath } from 'url'
+import TransmissionBuilder from '../../../transmissions/src/engine/TransmissionBuilder.js'
+import GitHubProcessorsFactory from './processors/GitHubProcessorsFactory.js'
+import AbstractProcessorFactory from '../../../transmissions/src/engine/AbstractProcessorFactory.js'
+import logger from '../../../transmissions/src/utils/Logger.js'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 async function main() {
-    logger.setLogLevel('debug');
+    logger.setLogLevel('debug')
 
-    const transmissionConfigFile = path.join(__dirname, 'github-list-transmission.ttl');
-    const processorsConfigFile = path.join(__dirname, 'processors-config.ttl');
+    const transmissionDatasetFile = path.join(__dirname, 'github-list-transmission.ttl')
+    const processorsConfigFile = path.join(__dirname, 'processors-config.ttl')
 
     try {
         // Register the custom processor factory
-        AbstractProcessorFactory.registerFactory('GitHubList', GitHubProcessorsFactory);
+        AbstractProcessorFactory.registerFactory('GitHubList', GitHubProcessorsFactory)
 
-        const transmissions = await TransmissionBuilder.build(transmissionConfigFile, processorsConfigFile);
+        const transmissions = await TransmissionBuilder.build(transmissionDatasetFile, processorsConfigFile)
 
         const message = {
             github: { name: 'danja' }
-        };
+        }
 
         for (const transmission of transmissions) {
-            await transmission.execute(message);
+            await transmission.execute(message)
         }
     } catch (error) {
-        logger.error('Error:', error);
-        logger.debug('Error details:', error.stack);
+        logger.error('Error:', error)
+        logger.debug('Error details:', error.stack)
     }
 }
 
-main().catch(console.error);
+main().catch(console.error)

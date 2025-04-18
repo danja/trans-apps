@@ -9,12 +9,12 @@ const __dirname = path.dirname(__filename)
 async function main() {
     logger.setLogLevel('debug')
 
-    const transmissionConfigFile = path.join(__dirname, 'transmissions.ttl')
+    const transmissionDatasetFile = path.join(__dirname, 'transmissions.ttl')
     const processorsConfigFile = path.join(__dirname, 'processors-config.ttl')
 
     try {
         const transmissions = await TransmissionBuilder.build(
-            transmissionConfigFile, 
+            transmissionDatasetFile,
             processorsConfigFile,
             path.join(__dirname, 'processors')
         )
@@ -28,7 +28,7 @@ async function main() {
         }
     } catch (error) {
         logger.error('Error:', error)
-        logger.debug('Error details:', error.stack) 
+        logger.debug('Error details:', error.stack)
     }
 }
 
