@@ -5,7 +5,7 @@
 
 
 :module_load_test a :Transmission ;
-    :pipe (:p20  ) . # :DE :p20 :SM
+    :pipe (:p20  :SM) . # :DE :p20 :SM
 
 :p10 a :DatasetReader .
   #  :configFile "manifest.ttl" .

@@ -1,5 +1,7 @@
-import Processor from '../../../../transmissions/src/processors/base/Processor.js'
-import logger from '../../../../transmissions/src/utils/Logger.js'
+// /home/danny/hyperdata/trans-apps/applications/test_module-load/processors/Concat.js
+
+import Processor from '/home/danny/hyperdata/transmissions/src/model/Processor.js'
+import logger from '/home/danny/hyperdata/transmissions/src/utils/Logger.js'
 
 class Concat extends Processor {
     constructor(config) {
