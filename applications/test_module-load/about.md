@@ -1,3 +1,17 @@
+```sh
+./trans -d ~/hyperdata/trans-apps/applications test_module-load -m '{"first":"TEST_","second":"PASSED"}'
+```
+
+Should have
+
+```json
+ "result": "TEST_PASSED"
+```
+
+in the output message
+
+---
+
 Intended behaviour is described below, the immediate problem is that the line :
 
 ```
