@@ -1,5 +1,5 @@
 ```sh
-./trans -d ~/hyperdata/trans-apps/applications test_module-load -m '{"first":"TEST_","second":"PASSED"}'
+./trans -v -M ~/hyperdata/trans-apps/applications test_module-load -m '{"first":"TEST_","second":"PASSED"}'
 ```
 
 Should have
