@@ -1,19 +1,19 @@
-// /home/danny/hyperdata/trans-apps/applications/test_module-load/processors/Concat.js
+// /home/danny/hyperdata/trans-apps/applications/test_module-load/processors/ConCat.js
 
 import Processor from '/home/danny/hyperdata/transmissions/src/model/Processor.js'
 import logger from '/home/danny/hyperdata/transmissions/src/utils/Logger.js'
 
-class Concat extends Processor {
+class ConCat extends Processor {
     constructor(config) {
         super(config)
-        logger.log(`Concat process.cwd() = ${process.cwd()}`)
+        logger.log(`ConCat process.cwd() = ${process.cwd()}`)
         this.firstKey = 'first'
         this.secondKey = 'second'
         this.resultKey = 'result'
     }
 
     async process(message) {
-        logger.debug('Concat execute method called')
+        logger.debug('ConCat execute method called')
         //  logger.reveal(message)
         // logger.debug(`Input message: ${JSON.stringify(message, null, 2)}`)
 
@@ -33,4 +33,4 @@ class Concat extends Processor {
     }
 }
 
-export default Concat
+export default ConCat

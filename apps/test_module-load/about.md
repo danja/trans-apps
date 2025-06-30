@@ -1,5 +1,13 @@
 ```sh
-./trans -v -M ~/hyperdata/trans-apps/applications test_module-load -m '{"first":"TEST_","second":"PASSED"}'
+./trans -v -cp ~/hyperdata/trans-apps/apps ~/hyperdata/trans-apps/apps/test_module-load -m '{"first":"TEST_","second":"PASSED"}'
+
+./trans -v ~/hyperdata/trans-apps/apps/test_module-load -m '{"first":"TEST_","second":"PASSED"}'
+
+
+
+./trans -v -cp ~/hyperdata/trans-apps/apps module-load -m '{"first":"TEST_","second":"PASSED"}'
+
+./trans -v -a ~/hyperdata/trans-apps/apps/test_module-load module-load  -m '{"first":"TEST_","second":"PASSED"}'
 ```
 
 Should have

@@ -10,7 +10,8 @@
 :p10 a :DatasetReader .
   #  :configFile "manifest.ttl" .
 
-:p20 a :Concat ;
+# Note ConCat not Concat
+:p20 a :ConCat ;
     :configKey :ConcatConfig .
 
 :SM a :ShowMessage .
